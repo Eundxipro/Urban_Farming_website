@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Ensure the API key is available in the environment variables
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const apiKey = process.env.API_KEY;
 if (!apiKey) {
   throw new Error("API_KEY environment variable not set");
 }

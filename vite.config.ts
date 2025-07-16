@@ -1,13 +1,17 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react'; // Atau plugin Vue jika Anda pakai Vue
+import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-        plugins: [react()], // Biarkan ini sesuai yang sudah ada
-        base: '/', // <-- PASTIKAN BARIS INI ADA DAN ISI NYA '/'
-        // Bagian 'define' yang lama HARUS DIHAPUS SEPENUHNYA dari sini
+        plugins: [react()],
+        base: '/', // Pastikan ini tetap '/'
+        define: {
+            // TAMBAHKAN KEMBALI BAGIAN INI
+            'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+            'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        },
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, '.'),
