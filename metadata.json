@@ -1,0 +1,6 @@
+
+{
+  "name": "Gemini Asisten",
+  "description": "An AI assistant to help users draft, correct, and summarize documents. Features a chat interface alongside a document editor with quick action buttons.",
+  "requestFramePermissions": []
+}
