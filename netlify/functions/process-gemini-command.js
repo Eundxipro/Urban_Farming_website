@@ -1,57 +1,52 @@
 // netlify/functions/process-gemini-command.js
-const { GoogleGenerativeAI } = require("@google/generative-ai"); // Menggunakan GoogleGenerativeAI
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 exports.handler = async (event) => {
+  console.log('Function started'); // Log awal
+  const startTime = Date.now();
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   const { currentContent, command, model } = JSON.parse(event.body);
 
-  // API Key harus diatur sebagai Environment Variable di Netlify (Site settings -> Environment)
-  const apiKey = process.env.GEMINI_API_KEY; 
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    console.error('Server: API Key not set in Netlify Environment'); // Log error di server
     return { statusCode: 500, body: JSON.stringify({ error: 'Server: API Key not set in Netlify Environment' }) };
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey); // Inisialisasi genAI
-  const geminiModel = genAI.getGenerativeModel({ model: model || "gemini-2.5-flash" }); // Ambil model dari client atau default
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const geminiModel = genAI.getGenerativeModel({ model: model || "gemini-2.5-flash" });
 
   const prompt = `
 Anda adalah asisten AI yang membantu dalam penyusunan dokumen.
 Berdasarkan konten dokumen saat ini dan perintah pengguna, perbarui dokumen tersebut.
-
-Perintah Pengguna: "${command}"
-
-Konten Dokumen Saat Ini:
----
-${currentContent || 'Dokumen masih kosong.'}
----
-
-Instruksi:
-- Analisis perintah pengguna dan konten saat ini.
-- Ubah konten dokumen sesuai dengan perintah.
-- Jika perintahnya adalah untuk meringkas, gantilah konten saat ini dengan ringkasannya.
-- Jika perintahnya adalah untuk melanjutkan, tambahkan kelanjutan yang relevan pada konten yang ada.
-- Jika perintahnya untuk memperbaiki tata bahasa, perbaiki kesalahan dalam teks yang ada.
-- Untuk perintah umum lainnya, gunakan penilaian terbaik Anda untuk memodifikasi dokumen secara membantu.
-- Kembalikan HANYA teks dokumen lengkap yang telah direvisi dalam format plain text. JANGAN sertakan markdown, komentar, atau teks pengantar apa pun di luar dokumen itu sendiri.
-`; // <-- Template literal DITUTUP DI SINI
+... (sisa prompt Anda) ...
+`;
 
   try {
+    console.log('Calling Gemini API...'); // Log sebelum panggilan API
+    const apiCallStartTime = Date.now();
     const result = await geminiModel.generateContent(prompt);
-    const response = await result.response;
-    const updatedContent = response.text(); // Ambil teks dari respons Gemini
+    const apiCallEndTime = Date.now();
+    console.log(`Gemini API call took: ${apiCallEndTime - apiCallStartTime}ms`); // Log durasi panggilan API
 
+    const response = await result.response;
+    const updatedContent = response.text();
+
+    const endTime = Date.now();
+    console.log(`Function finished in: ${endTime - startTime}ms`); // Log total durasi fungsi
     return {
       statusCode: 200,
       body: JSON.stringify({ updatedContent }),
     };
   } catch (error) {
-    console.error("Error calling Gemini API from Netlify Function:", error);
+    console.error("Error calling Gemini API from Netlify Function:", error); // Log error API Gemini
     return {
       statusCode: 500,
       body: JSON.stringify({ error: `Server: Failed to process command: ${error.message || error}` }),
     };
   }
-}; // <-- Kurung kurawal penutup untuk exports.handler
+};
